@@ -9,6 +9,3 @@ This system records and organizes essential information about **fields, crops, f
 By maintaining accurate data on input costs, harvest yields, and sales performance, the system helps farmers **evaluate production efficiency**, **reduce input waste**, and **maximize profits** for each crop and field across planting seasons.
 
 
-## Entity Relationship Diagram
-![image](farm ERD.jpeg)
-
