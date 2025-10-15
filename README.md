@@ -10,5 +10,5 @@ By maintaining accurate data on input costs, harvest yields, and sales performan
 
 
 ## Entity Relationship Diagram
-![image](screenshoot/farm ERD.jpeg)
+![image](./screenshoot/farm ERD.jpeg)
 
