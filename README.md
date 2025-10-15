@@ -1,6 +1,6 @@
-# 🌾 Agricultural Farm Production and Supply Management System
+# Agricultural Farm Production and Supply Management System
 
-## 🧾 Introduction
+## Introduction
 
 The **Agricultural Farm Production and Supply Management System** is a database-driven project designed to help farmers and agricultural organizations effectively manage and monitor their farming activities. 
 
