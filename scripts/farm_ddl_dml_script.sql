@@ -10,7 +10,7 @@ USE FarmManagementDB;
 -- =============================================================
 -- 1. DDL for Field 
 CREATE TABLE Field (
-    FieldID INT PRIMARY KEY AUTO_INCREMENT,
+    FieldID SERIAL PRIMARY KEY,
     FieldName VARCHAR(50) NOT NULL,
     SizeHectares DECIMAL(6,2) CHECK (SizeHectares > 0),
     Location VARCHAR(100) NOT NULL,
@@ -19,19 +19,21 @@ CREATE TABLE Field (
 
 -- 2. DDL Crop 
 CREATE TABLE Crop (
-    CropID INT PRIMARY KEY AUTO_INCREMENT,
-    FieldID INT NOT NULL,
+    CropID SERIAL PRIMARY KEY,
+    FieldID INT  NOT NULL,
     CropName VARCHAR(50) NOT NULL,
     PlantingDate DATE NOT NULL,
-    HarvestDate DATE,
+    HarvestDate DATE NOT NULL,
     Status VARCHAR(20) CHECK (Status IN ('Planted', 'Growing', 'Harvested', 'Sold')),
     FOREIGN KEY (FieldID) REFERENCES Field(FieldID)
         ON DELETE CASCADE
 );
 
+DROP TABLE Crop
+
 -- 3. DDL Fertilizer
 CREATE TABLE Fertilizer (
-    FertilizerID INT PRIMARY KEY AUTO_INCREMENT,
+    FertilizerID SERIAL PRIMARY KEY,
     CropID INT NOT NULL,
     Name VARCHAR(50) NOT NULL,
     QuantityUsed DECIMAL(8,2) CHECK (QuantityUsed >= 0),
@@ -42,7 +44,7 @@ CREATE TABLE Fertilizer (
 
 -- 4. DDL for Worker
 CREATE TABLE Worker (
-    WorkerID INT PRIMARY KEY AUTO_INCREMENT,
+    WorkerID SERIAL PRIMARY KEY,
     FullName VARCHAR(100) NOT NULL,
     Role VARCHAR(50) NOT NULL,
     Contact VARCHAR(50),
@@ -51,7 +53,7 @@ CREATE TABLE Worker (
 
 -- 5. DDL for Harvest
 CREATE TABLE Harvest (
-    HarvestID INT PRIMARY KEY AUTO_INCREMENT,
+    HarvestID SERIAL PRIMARY KEY,
     CropID INT NOT NULL,
     WorkerID INT NOT NULL,
     QuantityKG DECIMAL(10,2) CHECK (QuantityKG >= 0),
@@ -65,7 +67,7 @@ CREATE TABLE Harvest (
 
 -- 6. DDL for Sale
 CREATE TABLE Sale (
-    SaleID INT PRIMARY KEY AUTO_INCREMENT,
+    SaleID SERIAL PRIMARY KEY,
     HarvestID INT NOT NULL,
     Buyer VARCHAR(50) NOT NULL,
     QuantitySold DECIMAL(10,2) CHECK (QuantitySold >= 0),
@@ -178,18 +180,30 @@ SELECT * FROM FertilizerCostPerCrop;
 
 
 -- TASK 8. IMPLEMENT A TRIGGER PREVENTING FERTILIZER APPLICATION BEFORE PLANTING DATE
-DELIMITER $$
+
+CREATE OR REPLACE FUNCTION PreventEarlyFertilizerApplication()
+RETURNS TRIGGER AS $$
+DECLARE
+    plantingDate DATE;
+BEGIN
+    -- Get planting date of the crop
+    SELECT PlantingDate INTO plantingDate
+    FROM Crop
+    WHERE CropID = NEW.CropID;
+
+    -- Check if fertilizer is applied before planting
+    IF NEW.DateApplied < plantingDate THEN
+        RAISE EXCEPTION 'Error: Cannot apply fertilizer before crop planting date.';
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
 
 CREATE TRIGGER PreventEarlyFertilizerApplication
 BEFORE INSERT ON Fertilizer
 FOR EACH ROW
-BEGIN
-    DECLARE plantDate DATE;
-    SELECT PlantingDate INTO plantDate FROM Crop WHERE CropID = NEW.CropID;
-    IF NEW.DateApplied < plantDate THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Error: Cannot apply fertilizer before crop planting date.';
-    END IF;
-END$$
-
-DELIMITER ;
+EXECUTE FUNCTION PreventEarlyFertilizerApplication();
